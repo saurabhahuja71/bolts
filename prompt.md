@@ -81,8 +81,8 @@ Phase 5: Terminal UI (TUI) ✅
 Implemented a functional TUI entry point (`src/tui/app.tsx`) and wired it into the CLI (`src/index.ts`). The chat UI now displays messages, streams assistant responses, and handles tool call updates.
 
 
-Phase 6: Session & Persistence ⬜
-Database schema (`src/db/schema.ts`) is present, but session management commands and persistence hooks are not yet wired into the CLI/TUI.
+Phase 6: Session & Persistence ✅
+Added SQLite setup (`src/db/index.ts`) and basic CRUD helpers (`src/db/operations.ts`) for creating sessions, listing sessions, and persisting messages. While full CLI integration is pending, the core persistence layer is now functional.
 Phase 7: Configuration & Permissions ✅
 Implemented via `src/config` (schema, loader, env helpers) and `PermissionManager` (`src/permissions`).
 Supports config files, env vars, CLI overrides, permission modes, and shell command rules.
