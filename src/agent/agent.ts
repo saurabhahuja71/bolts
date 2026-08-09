@@ -1,0 +1,179 @@
+import { streamText, type LanguageModel, type ToolSet } from "ai";
+import { createModel } from "./providers";
+import { getSystemPrompt } from "./prompts";
+import { ToolRegistry } from "../tools";
+import type { AgentConfig, AgentEvent, AgentEventCallback, Message, ToolCall } from "../types";
+import { AgentError } from "../utils/errors";
+import { randomUUID } from "node:crypto";
+
+/**
+ * The Agent class orchestrates the full agent loop:
+ * plan → use tools → observe → repeat.
+ */
+export class Agent {
+  private model: LanguageModel;
+  private registry: ToolRegistry;
+  private config: AgentConfig;
+  private messages: Message[] = [];
+  private onEvent?: AgentEventCallback;
+
+  constructor(config: AgentConfig, registry: ToolRegistry, onEvent?: AgentEventCallback) {
+    this.config = config;
+    this.registry = registry;
+    this.onEvent = onEvent;
+    this.model = createModel(config as never);
+  }
+
+  /** Get the current message history. */
+  getHistory(): Message[] {
+    return this.messages;
+  }
+
+  /** Set the message history (e.g., when resuming a session). */
+  setHistory(messages: Message[]): void {
+    this.messages = messages;
+  }
+
+  /** Add a user message to the history. */
+  addUserMessage(content: string): Message {
+    const message: Message = {
+      id: randomUUID(),
+      sessionId: this.config.cwd,
+      role: "user",
+      content,
+      createdAt: new Date(),
+    };
+    this.messages.push(message);
+    return message;
+  }
+
+  /** Emit an event to the callback. */
+  private emit(event: AgentEvent): void {
+    this.onEvent?.(event);
+  }
+
+  /**
+   * Run the agent loop for a single user message.
+   * Continues until the model stops or max steps is reached.
+   */
+  async run(userInput: string): Promise<Message> {
+    this.addUserMessage(userInput);
+
+    const systemPrompt = getSystemPrompt(this.config.permissionMode, this.config.systemPrompt);
+
+    // Convert tools to AI SDK format
+    const tools: ToolSet = {};
+    for (const tool of this.registry.list()) {
+      tools[tool.name] = {
+        description: tool.description,
+        parameters: tool.inputSchema,
+        execute: async (input: unknown) => {
+          const toolCall: ToolCall = {
+            id: randomUUID(),
+            messageId: "",
+            name: tool.name,
+            input: (input ?? {}) as Record<string, unknown>,
+            status: "running",
+            createdAt: new Date(),
+          };
+          this.emit({ type: "tool_start", toolCall });
+
+          const start = Date.now();
+          try {
+            const result = await tool.execute(input, {
+              cwd: this.config.cwd,
+              sessionId: this.config.cwd,
+              permissionMode: this.config.permissionMode,
+              requestPermission: async () => true,
+              logger: {
+                info: () => {},
+                warn: () => {},
+                error: () => {},
+              },
+            });
+            toolCall.status = "success";
+            toolCall.output = result;
+            toolCall.durationMs = Date.now() - start;
+            this.emit({ type: "tool_end", toolCall });
+            return result;
+          } catch (err) {
+            toolCall.status = "error";
+            toolCall.output = { error: (err as Error).message };
+            toolCall.durationMs = Date.now() - start;
+            this.emit({ type: "tool_end", toolCall });
+            return { error: (err as Error).message };
+          }
+        },
+      };
+    }
+
+    // Convert message history to AI SDK format
+    const history = this.messages.map((m) => ({
+      role: m.role === "tool" ? "assistant" : m.role,
+      content: m.content,
+    }));
+
+    let fullResponse = "";
+    let step = 0;
+
+    while (step < this.config.maxSteps) {
+      step++;
+      this.emit({ type: "step", step, maxSteps: this.config.maxSteps });
+
+      try {
+        const result = streamText({
+          model: this.model,
+          system: systemPrompt,
+          messages: history as never,
+          tools,
+          temperature: this.config.temperature,
+          maxSteps: 1,
+        });
+
+        // Stream the text response
+        for await (const chunk of result.textStream) {
+          fullResponse += chunk;
+          this.emit({ type: "text", content: chunk });
+        }
+
+        // Check if the model wants to use tools
+        const toolResults = (await result.toolResults) as Array<{
+          toolName: string;
+          result: unknown;
+        }>;
+        if (toolResults.length === 0) {
+          // Model is done
+          break;
+        }
+
+        // Add tool results to history and continue
+        for (const tr of toolResults) {
+          history.push({
+            role: "assistant",
+            content: JSON.stringify({ tool: tr.toolName, result: tr.result }),
+          });
+        }
+      } catch (err) {
+        this.emit({ type: "error", error: (err as Error).message });
+        throw new AgentError(`Agent loop failed at step ${step}: ${(err as Error).message}`);
+      }
+    }
+
+    if (step >= this.config.maxSteps) {
+      this.emit({ type: "error", error: `Max steps (${this.config.maxSteps}) reached` });
+    }
+
+    // Create the assistant message
+    const assistantMessage: Message = {
+      id: randomUUID(),
+      sessionId: this.config.cwd,
+      role: "assistant",
+      content: fullResponse,
+      createdAt: new Date(),
+    };
+    this.messages.push(assistantMessage);
+    this.emit({ type: "done", message: assistantMessage });
+
+    return assistantMessage;
+  }
+}

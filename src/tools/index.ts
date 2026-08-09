@@ -1,0 +1,29 @@
+import { ToolRegistry } from "./registry";
+import { readFileTool } from "./read-file";
+import { writeFileTool } from "./write-file";
+import { editFileTool } from "./edit-file";
+import { listDirectoryTool } from "./list-directory";
+import { shellTool } from "./shell";
+import { searchCodebaseTool } from "./search";
+import { gitStatusTool, gitDiffTool, gitCommitTool } from "./git";
+
+export { ToolRegistry } from "./registry";
+export type { Tool, ToolResult } from "./types";
+export { truncateOutput, formatToolResult, MAX_TOOL_OUTPUT } from "./types";
+
+/** Create a registry with all default tools registered. */
+export function createDefaultRegistry(): ToolRegistry {
+  const registry = new ToolRegistry();
+  registry.registerAll([
+    readFileTool,
+    writeFileTool,
+    editFileTool,
+    listDirectoryTool,
+    shellTool,
+    searchCodebaseTool,
+    gitStatusTool,
+    gitDiffTool,
+    gitCommitTool,
+  ]);
+  return registry;
+}
