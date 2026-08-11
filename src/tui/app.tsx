@@ -47,6 +47,14 @@ const App: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Register this hook before the initialization guard so hook order remains
+  // identical before and after the agent is constructed.
+  useInput((input, key) => {
+    if (!permissionPrompt) return;
+    if (input.toLowerCase() === "y" || key.return) { permissionResolver.current?.(true); permissionResolver.current = null; setPermissionPrompt(null); }
+    else if (input.toLowerCase() === "n" || key.escape) { permissionResolver.current?.(false); permissionResolver.current = null; setPermissionPrompt(null); }
+  });
+
   // Guard against the brief moment before the agent is ready
   if (!agent) {
     return (
@@ -80,12 +88,6 @@ const App: React.FC = () => {
     else if (key === "t") setTodosVisible((visible) => !visible);
     else if (key === "i") setInteractive((value) => !value);
   };
-  useInput((input, key) => {
-    if (!permissionPrompt) return;
-    if (input.toLowerCase() === "y" || key.return) { permissionResolver.current?.(true); permissionResolver.current = null; setPermissionPrompt(null); }
-    else if (input.toLowerCase() === "n" || key.escape) { permissionResolver.current?.(false); permissionResolver.current = null; setPermissionPrompt(null); }
-  });
-
   return (
     <Box flexDirection="column" width="100%">
       <Box>
