@@ -76,6 +76,9 @@ The command palette text is also available through `/help`. Prompts submitted wh
 
 ## Tools and permissions
 
+For automation, use `--permission allow exec "task"`; this runs the same
+agent loop without requiring an interactive Ink terminal.
+
 The default registry includes `read_file`, `write_file`, `edit_file`, `list_directory`, `run_shell_command`, `search_codebase`, `git_status`, `git_diff`, `git_commit`, and todo tools. Read-only tools run in `ask` mode; destructive tools display an inline approval request. Press `Y` to allow or `N` to deny. `allow` permits tools for the session, while `plan` refuses destructive execution and asks the model to produce a plan.
 
 For remote work, provide the literal SSH host, user, and command in the prompt. The agent should not try to execute a shell alias on the remote machine, and it should stop after a failed focused retry rather than looping through unrelated approaches.

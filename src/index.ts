@@ -7,6 +7,9 @@ import { Command } from "commander";
 import { loadConfig } from "./config";
 import { logger } from "./utils/logger";
 import { formatError } from "./utils/errors";
+import { Agent } from "./agent";
+import { createDefaultRegistry } from "./tools";
+import type { AgentEvent } from "./types";
 
 const program = new Command();
 
@@ -56,6 +59,34 @@ program
     } catch (err) {
       console.error(`Error: ${formatError(err)}`);
       process.exit(1);
+    }
+  });
+
+program
+  .command("exec <prompt>")
+  .description("Run one task headlessly with tools enabled")
+  .option("-d, --debug", "print tool calls and results to stderr")
+  .action(async (prompt, opts, command) => {
+    try {
+      const root = command.parent?.opts() ?? program.opts();
+      const permission = ["auto", "ask", "allow", "plan"].includes(root.permission) ? root.permission : undefined;
+      const config = loadConfig({
+        cliOverrides: {
+          ...(root.model ? { model: root.model } : {}),
+          ...(root.provider ? { provider: root.provider } : {}),
+          ...(permission ? { permissionMode: permission } : {}),
+        },
+      });
+      const agent = new Agent(config, createDefaultRegistry(), (event: AgentEvent) => {
+        if (!opts.debug) return;
+        if (event.type === "tool_start") console.error(`[tool:start] ${event.toolCall.name} ${JSON.stringify(event.toolCall.input)}`);
+        if (event.type === "tool_end") console.error(`[tool:end] ${event.toolCall.name} ${event.toolCall.status} ${JSON.stringify(event.toolCall.output)}`);
+        if (event.type === "error") console.error(`[agent:error] ${event.error}`);
+      });
+      await agent.run(prompt);
+    } catch (err) {
+      console.error(`Error: ${formatError(err)}`);
+      process.exitCode = 1;
     }
   });
 
