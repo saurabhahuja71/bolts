@@ -63,10 +63,10 @@ Keyboard shortcuts:
 
 | Shortcut | Action |
 | --- | --- |
-| `Ctrl+Shift+P` | Show commands |
-| `Ctrl+Shift+M` | Cycle `ASK → ALLOW → PLAN` |
-| `Ctrl+Shift+T` | Toggle todos |
-| `Ctrl+Shift+I` | Toggle interactive cursor/native selection |
+| `Ctrl+P` / `Ctrl+Shift+P` | Show commands |
+| `Ctrl+O` / `Ctrl+Shift+M` | Cycle `ASK → ALLOW → PLAN` (`Ctrl+O` works in terminals that map Ctrl+Shift+M to Enter) |
+| `Ctrl+T` / `Ctrl+Shift+T` | Toggle todos |
+| `Ctrl+I` / `Tab` / `Ctrl+Shift+I` | Toggle interactive cursor/native selection |
 | `Ctrl+C` | Cancel the active task |
 | `Ctrl+Q` | Quit |
 | `Enter` | Send |

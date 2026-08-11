@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Box, Text, useInput } from "ink";
+import { resolveShortcut } from "../shortcuts";
 
 interface InputBoxProps {
   onSubmit: (value: string) => void;
@@ -24,10 +25,8 @@ export function InputBox({ onSubmit, disabled, placeholder, onShortcut, onInterr
 
   useInput((input, key) => {
     if (key.ctrl && input.toLowerCase() === "c") { onInterrupt?.(); return; }
-    if (key.ctrl && key.shift && input) {
-      const shortcut = input.toLowerCase();
-      if (["p", "m", "t", "i"].includes(shortcut)) { onShortcut?.(shortcut); return; }
-    }
+    const shortcut = resolveShortcut(input, key);
+    if (shortcut) { onShortcut?.(shortcut); return; }
     if (disabled) return;
 
     // Submit on Enter (without shift)
@@ -101,7 +100,7 @@ export function InputBox({ onSubmit, disabled, placeholder, onShortcut, onInterr
       </Box>
       <Box>
         <Text color="gray" dimColor>
-          {placeholder ?? "Type a message. Enter to send, Shift+Enter for newline, ↑/↓ for history."}
+          {placeholder ?? "Enter to send, Shift+Enter for newline, ↑/↓ for history."}
         </Text>
       </Box>
     </Box>
