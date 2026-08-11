@@ -19,7 +19,7 @@ program
   .option("-c, --config <path>", "path to config file")
   .option("-m, --model <model>", "model to use")
   .option("-p, --provider <provider>", "provider to use")
-  .option("--permission <mode>", "permission mode: auto, ask, plan")
+  .option("--permission <mode>", "permission mode: auto, ask, allow, plan")
   .option("-d, --debug", "enable debug logging");
 
 program
@@ -29,7 +29,7 @@ program
   .action(async (opts) => {
     try {
       const permissionMode =
-        opts.permission === "auto" || opts.permission === "ask" || opts.permission === "plan"
+        opts.permission === "auto" || opts.permission === "ask" || opts.permission === "allow" || opts.permission === "plan"
           ? opts.permission
           : undefined;
 
@@ -51,8 +51,7 @@ program
 
       // Launch the TUI (Phase 5)
       // Import locally to avoid circular dependencies during type‑checking.
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { startTUI } = require("./tui/app");
+      const { startTUI } = await import("./tui/app");
       startTUI();
     } catch (err) {
       console.error(`Error: ${formatError(err)}`);

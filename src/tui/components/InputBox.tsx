@@ -1,26 +1,33 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Box, Text, useInput } from "ink";
 
 interface InputBoxProps {
   onSubmit: (value: string) => void;
   disabled?: boolean;
   placeholder?: string;
+  onShortcut?: (shortcut: string) => void;
+  onInterrupt?: () => void;
 }
 
 /**
  * Multi-line input box with history navigation (up/down arrows).
  * Enter submits, Shift+Enter adds a newline.
  */
-export function InputBox({ onSubmit, disabled, placeholder }: InputBoxProps) {
+export function InputBox({ onSubmit, disabled, placeholder, onShortcut, onInterrupt }: InputBoxProps) {
   const [value, setValue] = useState("");
   const [history, setHistory] = useState<string[]>([]);
-  const [historyIndex, setHistoryIndex] = useState(-1);
+  const [, setHistoryIndex] = useState(-1);
   const inputRef = useRef("");
 
   // Keep a ref so useInput can read the latest value
   inputRef.current = value;
 
   useInput((input, key) => {
+    if (key.ctrl && input.toLowerCase() === "c") { onInterrupt?.(); return; }
+    if (key.ctrl && key.shift && input) {
+      const shortcut = input.toLowerCase();
+      if (["p", "m", "t", "i"].includes(shortcut)) { onShortcut?.(shortcut); return; }
+    }
     if (disabled) return;
 
     // Submit on Enter (without shift)

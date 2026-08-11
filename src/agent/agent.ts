@@ -5,6 +5,7 @@ import { ToolRegistry } from "../tools";
 import type { AgentConfig, AgentEvent, AgentEventCallback, Message, ToolCall } from "../types";
 import { AgentError } from "../utils/errors";
 import { randomUUID } from "node:crypto";
+import { PermissionManager } from "../permissions/manager";
 
 /**
  * The Agent class orchestrates the full agent loop:
@@ -15,12 +16,15 @@ export class Agent {
   private registry: ToolRegistry;
   private config: AgentConfig;
   private messages: Message[] = [];
-  private onEvent?: AgentEventCallback;
+  public onEvent?: AgentEventCallback;
+  private permissions: PermissionManager;
+  private permissionRequester?: (toolName: string, input: unknown) => Promise<boolean>;
 
   constructor(config: AgentConfig, registry: ToolRegistry, onEvent?: AgentEventCallback) {
     this.config = config;
     this.registry = registry;
     this.onEvent = onEvent;
+    this.permissions = new PermissionManager({ mode: config.permissionMode, shellRules: config.shellRules, requester: async (request) => this.permissionRequester ? this.permissionRequester(request.toolName, request.input) : false });
     this.model = createModel(config as never);
   }
 
@@ -80,11 +84,14 @@ export class Agent {
 
           const start = Date.now();
           try {
-            const result = await tool.execute(input, {
+            const result = await this.registry.execute(tool.name, input, {
               cwd: this.config.cwd,
               sessionId: this.config.cwd,
-              permissionMode: this.config.permissionMode,
-              requestPermission: async () => true,
+              permissionMode: this.permissions.currentMode,
+              requestPermission: async (toolName, permissionInput) => {
+                await this.permissions.assertAllowed({ toolName, input: permissionInput, destructive: true });
+                return true;
+              },
               logger: {
                 info: () => {},
                 warn: () => {},
@@ -176,4 +183,8 @@ export class Agent {
 
     return assistantMessage;
   }
+
+  setPermissionMode(mode: AgentConfig["permissionMode"]): void { this.config.permissionMode = mode; this.permissions.setMode(mode); }
+  getPermissionMode(): AgentConfig["permissionMode"] { return this.permissions.currentMode; }
+  setPermissionRequester(requester: (toolName: string, input: unknown) => Promise<boolean>): void { this.permissionRequester = requester; }
 }

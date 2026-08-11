@@ -44,7 +44,7 @@ export interface ToolCall {
 }
 
 /** Permission modes for tool execution. */
-export type PermissionMode = "auto" | "ask" | "plan";
+export type PermissionMode = "auto" | "ask" | "allow" | "plan";
 
 /** Shell command allow/deny configuration. */
 export interface ShellRules {
@@ -83,6 +83,7 @@ export interface AgentConfig {
   shellRules?: ShellRules;
   maxToolOutput?: number;
   diffPreview?: boolean;
+  theme?: "light" | "dark";
   diagnostics?: {
     enabled?: boolean;
     command?: string;

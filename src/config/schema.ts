@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 /** Permission modes for tool execution. */
-export const permissionModeSchema = z.enum(["auto", "ask", "plan"]);
+export const permissionModeSchema = z.enum(["auto", "ask", "allow", "plan"]);
 
 export const providerNameSchema = z.enum([
   "openai",
@@ -9,6 +9,7 @@ export const providerNameSchema = z.enum([
   "google",
   "openrouter",
   "ollama",
+  "sglang",
 ]);
 
 /** Provider configuration. */
@@ -72,6 +73,7 @@ export const configSchema = z.object({
   dataDir: z.string().optional(),
   maxToolOutput: z.number().int().min(1_000).max(100_000).default(10_000),
   diffPreview: z.boolean().default(true),
+  theme: z.enum(["light", "dark"]).default("light"),
   shellRules: shellRulesSchema.optional(),
   providers: z.record(z.string(), providerConfigSchema).optional(),
   diagnostics: diagnosticsConfigSchema.default({}),

@@ -3,7 +3,7 @@
  * These are intentionally simple – they cover the minimal needs for Phase 6
  * (session creation, listing, and message persistence).
  */
-import { db, sessions, messages, toolCalls } from "./index";
+import { db, sessions, messages } from "./index";
 import { eq } from "drizzle-orm";
 
 /** Create a new session and return its ID. */
@@ -22,8 +22,8 @@ export async function createSession(params: {
       cwd: params.cwd,
       model: params.model,
       provider: params.provider,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
       metadata: null,
     })
     .run();
@@ -50,7 +50,7 @@ export async function addMessage(params: {
       sessionId: params.sessionId,
       role: params.role,
       content: params.content,
-      createdAt: Date.now(),
+      createdAt: new Date(),
     })
     .run();
   return id;

@@ -6,7 +6,7 @@ import type { LanguageModel } from "ai";
 import { ProviderError } from "../../utils/errors";
 import type { Config } from "../../config";
 
-export type ProviderName = "openai" | "anthropic" | "google" | "openrouter" | "ollama";
+export type ProviderName = "openai" | "anthropic" | "google" | "openrouter" | "ollama" | "sglang";
 
 /**
  * Create a language model instance for the given provider.
@@ -37,7 +37,8 @@ export function createModel(config: Config): LanguageModel {
       return google(model);
     }
 
-    case "openrouter": {
+    case "openrouter":
+    case "sglang": {
       const openrouter = createOpenAICompatible({
         name: "openrouter",
         baseURL: baseUrl ?? "https://openrouter.ai/api/v1",

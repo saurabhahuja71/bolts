@@ -6,6 +6,7 @@ import { listDirectoryTool } from "./list-directory";
 import { shellTool } from "./shell";
 import { searchCodebaseTool } from "./search";
 import { gitStatusTool, gitDiffTool, gitCommitTool } from "./git";
+import { todoTools } from "./todos";
 
 export { ToolRegistry } from "./registry";
 export type { Tool, ToolResult } from "./types";
@@ -24,6 +25,7 @@ export function createDefaultRegistry(): ToolRegistry {
     gitStatusTool,
     gitDiffTool,
     gitCommitTool,
+    ...todoTools,
   ]);
   return registry;
 }

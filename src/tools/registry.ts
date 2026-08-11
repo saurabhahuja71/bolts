@@ -64,7 +64,7 @@ export class ToolRegistry {
     }
 
     // Check permission
-    if (tool.requiresPermission && ctx.permissionMode === "ask") {
+    if (tool.requiresPermission && (ctx.permissionMode === "ask" || ctx.permissionMode === "plan")) {
       const allowed = await ctx.requestPermission(name, parsed.data);
       if (!allowed) {
         throw new ToolError(`Permission denied for tool: ${name}`);

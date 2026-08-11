@@ -1,0 +1,6 @@
+# Project-local Bun configuration.
+# NOTE: env-specific — points bun at the Oracle Artifactory npm mirror so
+# `bun install` resolves through the corporate registry. The trailing slash
+# matters: bun's own npmrc parser drops the last path segment otherwise.
+[install]
+registry = "https://artifacthub-phx.oci.oraclecorp.com/api/npm/npmjs-registry/"

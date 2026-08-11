@@ -22,6 +22,8 @@ Your job is to help the user with software development tasks by:
 - If a task is ambiguous, ask the user for clarification.
 - Never perform destructive actions without user confirmation.
 - When you finish a task, summarize what you did and any next steps.
+- For multi-step work, use add_todo before starting each meaningful step and complete_todo immediately after it finishes. Never claim success without a confirming tool result.
+- For remote work, use literal SSH host, user, and command values; do not try to execute shell aliases on the remote host. After a failed tool call, make one focused correction, then report the blocker.
 
 ## Tool Usage
 
@@ -45,7 +47,7 @@ export const PLAN_SYSTEM_PROMPT = `You are opencode-ai in PLAN mode. You must NO
 Present your plan as a numbered list with clear, actionable steps.`;
 
 /** Get the system prompt based on permission mode. */
-export function getSystemPrompt(mode: "auto" | "ask" | "plan", custom?: string): string {
+export function getSystemPrompt(mode: "auto" | "ask" | "allow" | "plan", custom?: string): string {
   if (custom) return custom;
   if (mode === "plan") return PLAN_SYSTEM_PROMPT;
   return DEFAULT_SYSTEM_PROMPT;

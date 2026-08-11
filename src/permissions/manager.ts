@@ -19,7 +19,7 @@ export interface PermissionManagerOptions {
 
 /** Central policy engine for destructive tools and shell command rules. */
 export class PermissionManager {
-  private readonly mode: PermissionMode;
+  private mode: PermissionMode;
   private readonly shellRules?: ShellRules;
   private readonly requester?: PermissionRequester;
 
@@ -28,6 +28,9 @@ export class PermissionManager {
     this.shellRules = options.shellRules;
     this.requester = options.requester;
   }
+
+  get currentMode(): PermissionMode { return this.mode; }
+  setMode(mode: PermissionMode): void { this.mode = mode; }
 
   async assertAllowed(request: PermissionRequest & { destructive?: boolean }): Promise<void> {
     if (request.toolName === "run_shell_command") {
@@ -42,7 +45,7 @@ export class PermissionManager {
       );
     }
 
-    if (this.mode === "auto") return;
+    if (this.mode === "auto" || this.mode === "allow") return;
 
     const allowed = await (this.requester?.(request) ?? Promise.resolve(false));
     if (!allowed) throw new PermissionError(`Permission denied for tool '${request.toolName}'.`);
