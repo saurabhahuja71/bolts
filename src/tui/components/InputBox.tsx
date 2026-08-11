@@ -8,13 +8,14 @@ interface InputBoxProps {
   placeholder?: string;
   onShortcut?: (shortcut: string) => void;
   onInterrupt?: () => void;
+  onQuit?: () => void;
 }
 
 /**
  * Multi-line input box with history navigation (up/down arrows).
  * Enter submits, Shift+Enter adds a newline.
  */
-export function InputBox({ onSubmit, disabled, placeholder, onShortcut, onInterrupt }: InputBoxProps) {
+export function InputBox({ onSubmit, disabled, placeholder, onShortcut, onInterrupt, onQuit }: InputBoxProps) {
   const [value, setValue] = useState("");
   const [history, setHistory] = useState<string[]>([]);
   const [, setHistoryIndex] = useState(-1);
@@ -26,6 +27,7 @@ export function InputBox({ onSubmit, disabled, placeholder, onShortcut, onInterr
   useInput((input, key) => {
     if (key.ctrl && input.toLowerCase() === "c") { onInterrupt?.(); return; }
     const shortcut = resolveShortcut(input, key);
+    if (shortcut === "q") { onQuit?.(); return; }
     if (shortcut) { onShortcut?.(shortcut); return; }
     if (disabled) return;
 

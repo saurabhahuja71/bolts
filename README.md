@@ -63,12 +63,12 @@ Keyboard shortcuts:
 
 | Shortcut | Action |
 | --- | --- |
-| `Ctrl+P` / `Ctrl+Shift+P` | Show commands |
-| `Ctrl+O` / `Ctrl+Shift+M` | Cycle `ASK → ALLOW → PLAN` (`Ctrl+O` works in terminals that map Ctrl+Shift+M to Enter) |
-| `Ctrl+T` / `Ctrl+Shift+T` | Toggle todos |
-| `Ctrl+I` / `Tab` / `Ctrl+Shift+I` | Toggle interactive cursor/native selection |
+| `Alt+P` | Show commands (avoids VS Code Ctrl+P) |
+| `Alt+M` | Cycle `ASK → ALLOW → PLAN` |
+| `Alt+T` | Toggle todos |
+| `Alt+I` | Toggle interactive cursor/native selection |
 | `Ctrl+C` | Cancel the active task |
-| `Ctrl+Q` | Quit |
+| `Ctrl+Q` / `Alt+Q` | Quit |
 | `Enter` | Send |
 | `Shift+Enter` | Newline |
 

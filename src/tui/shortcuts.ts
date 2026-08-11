@@ -7,10 +7,16 @@ export type InputKey = {
   ctrl?: boolean;
   shift?: boolean;
   tab?: boolean;
+  meta?: boolean;
 };
 
 export function resolveShortcut(input: string, key: InputKey): string | undefined {
   const value = input.toLowerCase();
+
+  // Alt-based bindings avoid Ctrl+P/Ctrl+I being intercepted by VS Code or
+  // interpreted by the terminal before Ink receives the keystroke.
+  if (key.meta && ["p", "m", "t", "i"].includes(value)) return value;
+  if (key.meta && value === "q") return "q";
 
   // Keep the requested Ctrl+Shift bindings when the terminal reports them.
   if (key.ctrl && key.shift && ["p", "m", "t", "i"].includes(value)) return value;
@@ -27,6 +33,8 @@ export function resolveShortcut(input: string, key: InputKey): string | undefine
 
   // Some terminal keyboard protocols encode Ctrl+Shift+M as Ctrl+M.
   if (key.ctrl && value === "m") return "m";
+
+  if (key.ctrl && value === "q") return "q";
 
   return undefined;
 }

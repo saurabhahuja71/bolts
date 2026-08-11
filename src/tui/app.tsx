@@ -65,7 +65,7 @@ const App: React.FC = () => {
   }
 
   void todoVersion;
-  const showCommands = () => setNotice("Commands: /help /model /mode ask|allow|plan /todo /queue /permissions /theme dark|light /mouse interactive|select /new /quit. Shortcuts: Ctrl+P commands, Ctrl+O mode, Ctrl+T todos, Ctrl+I/Tab cursor.");
+  const showCommands = () => setNotice("Commands: /help /model /mode ask|allow|plan /todo /queue /permissions /theme dark|light /mouse interactive|select /new /quit. Shortcuts: Alt+P commands, Alt+M mode, Alt+T todos, Alt+I cursor, Ctrl+Q/Alt+Q quit.");
   const setPermissionMode = (next: PermissionMode) => { agent.setPermissionMode(next); setMode(next); };
   const cycleMode = () => { const modes: PermissionMode[] = ["ask", "allow", "plan"]; setPermissionMode(modes[(modes.indexOf(mode) + 1) % modes.length] ?? "ask"); };
   const submit = (input: string) => {
@@ -98,9 +98,9 @@ const App: React.FC = () => {
         </Box>
         {todosVisible && <TodoPanel />}
       </Box>
-      <Text dimColor>Boltpy | Mode: {mode.toUpperCase()} | Cursor: {interactive ? "INTERACTIVE" : "SELECT"} {isRunning ? "| Processing…" : "| Ready"}</Text>
+      <Text dimColor>Boltpy | Mode: {mode.toUpperCase()} | Cursor: {interactive ? "INTERACTIVE" : "SELECT"} {isRunning ? "| Processing…" : "| Ready"} | Quit: Ctrl+Q/Alt+Q</Text>
       {permissionPrompt && <Text color="yellow">Permission required for {permissionPrompt.tool}: {JSON.stringify(permissionPrompt.input)} — press Y to allow or N to deny</Text>}
-      <InputBox onSubmit={submit} onShortcut={shortcut} onInterrupt={interrupt} disabled={Boolean(permissionPrompt)} placeholder="Enter send · Ctrl+P commands · Ctrl+O mode · Ctrl+T todos · Ctrl+I/Tab cursor · Ctrl+C cancel" />
+      <InputBox onSubmit={submit} onShortcut={shortcut} onInterrupt={interrupt} onQuit={() => process.exit(0)} disabled={Boolean(permissionPrompt)} placeholder="Enter send · Alt+P commands · Alt+M mode · Alt+T todos · Alt+I cursor · Ctrl+Q/Alt+Q quit · Ctrl+C cancel" />
     </Box>
   );
 };
