@@ -20,13 +20,23 @@ export function InputBox({ onSubmit, disabled, placeholder, onShortcut, onInterr
   const [history, setHistory] = useState<string[]>([]);
   const [, setHistoryIndex] = useState(-1);
   const inputRef = useRef("");
+  const altPrefixRef = useRef(false);
+  const altPrefixTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Keep a ref so useInput can read the latest value
   inputRef.current = value;
 
   useInput((input, key) => {
+    if (key.escape) {
+      altPrefixRef.current = true;
+      if (altPrefixTimerRef.current) clearTimeout(altPrefixTimerRef.current);
+      altPrefixTimerRef.current = setTimeout(() => { altPrefixRef.current = false; }, 500);
+      return;
+    }
     if (key.ctrl && input.toLowerCase() === "c") { onInterrupt?.(); return; }
-    const shortcut = resolveShortcut(input, key);
+    const shortcut = resolveShortcut(input, altPrefixRef.current ? { meta: true } : key);
+    altPrefixRef.current = false;
+    if (altPrefixTimerRef.current) { clearTimeout(altPrefixTimerRef.current); altPrefixTimerRef.current = null; }
     if (shortcut === "q") { onQuit?.(); return; }
     if (shortcut) { onShortcut?.(shortcut); return; }
     if (disabled) return;
