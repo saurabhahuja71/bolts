@@ -116,58 +116,33 @@ export class Agent {
 
     // Convert message history to AI SDK format
     const history = this.messages.map((m) => ({
-      role: m.role === "tool" ? "assistant" : m.role,
+      role: m.role,
       content: m.content,
     }));
 
     let fullResponse = "";
-    let step = 0;
+    const step = 1;
+    this.emit({ type: "step", step, maxSteps: this.config.maxSteps });
 
-    while (step < this.config.maxSteps) {
-      step++;
-      this.emit({ type: "step", step, maxSteps: this.config.maxSteps });
-
-      try {
-        const result = streamText({
-          model: this.model,
-          system: systemPrompt,
-          messages: history as never,
-          tools,
-          temperature: this.config.temperature,
-          maxSteps: 1,
-        });
-
-        // Stream the text response
-        for await (const chunk of result.textStream) {
-          fullResponse += chunk;
-          this.emit({ type: "text", content: chunk });
-        }
-
-        // Check if the model wants to use tools
-        const toolResults = (await result.toolResults) as Array<{
-          toolName: string;
-          result: unknown;
-        }>;
-        if (toolResults.length === 0) {
-          // Model is done
-          break;
-        }
-
-        // Add tool results to history and continue
-        for (const tr of toolResults) {
-          history.push({
-            role: "assistant",
-            content: JSON.stringify({ tool: tr.toolName, result: tr.result }),
-          });
-        }
-      } catch (err) {
-        this.emit({ type: "error", error: (err as Error).message });
-        throw new AgentError(`Agent loop failed at step ${step}: ${(err as Error).message}`);
+    try {
+      // Let the AI SDK own the multi-step protocol. It preserves native
+      // assistant/tool/tool-result messages; manually appending tool output
+      // as assistant JSON causes models to print tool results as prose.
+      const result = streamText({
+        model: this.model,
+        system: systemPrompt,
+        messages: history as never,
+        tools,
+        temperature: this.config.temperature,
+        maxSteps: this.config.maxSteps,
+      });
+      for await (const chunk of result.textStream) {
+        fullResponse += chunk;
+        this.emit({ type: "text", content: chunk });
       }
-    }
-
-    if (step >= this.config.maxSteps) {
-      this.emit({ type: "error", error: `Max steps (${this.config.maxSteps}) reached` });
+    } catch (err) {
+      this.emit({ type: "error", error: (err as Error).message });
+      throw new AgentError(`Agent loop failed at step ${step}: ${(err as Error).message}`);
     }
 
     // Create the assistant message
