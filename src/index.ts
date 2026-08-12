@@ -78,9 +78,15 @@ program
         },
       });
       const agent = new Agent(config, createDefaultRegistry(), (event: AgentEvent) => {
-        if (!opts.debug) return;
+        const showTools = opts.debug || process.env.BOLTS_RAW_TOOL_OUTPUT !== "0";
+        if (!showTools) return;
         if (event.type === "tool_start") console.error(`[tool:start] ${event.toolCall.name} ${JSON.stringify(event.toolCall.input)}`);
-        if (event.type === "tool_end") console.error(`[tool:end] ${event.toolCall.name} ${event.toolCall.status} ${JSON.stringify(event.toolCall.output)}`);
+        if (event.type === "tool_end") {
+          console.error(`[tool:end] ${event.toolCall.name} ${event.toolCall.status}`);
+          const output = event.toolCall.output;
+          if (typeof output === "string") console.log(output);
+          else if (output !== undefined) console.log(JSON.stringify(output));
+        }
         if (event.type === "error") console.error(`[agent:error] ${event.error}`);
       });
       await agent.run(prompt);
@@ -111,10 +117,13 @@ program
     }
   });
 
-program.parse(process.argv);
-
-// If no command given, default to chat
-if (!process.argv.slice(2).length) {
-  const [bin, script] = process.argv;
-  program.parse([bin ?? "bun", script ?? "opencode", "chat"]);
+// Treat a bare prompt as a headless task, matching the dedicated launcher
+// behavior and avoiding Commander interpreting the prompt as an unknown command.
+const argv = [...process.argv];
+if (argv.length > 2 && !["chat", "exec", "sessions", "config"].includes(argv[2] ?? "") && !argv[2]?.startsWith("-")) {
+  argv.splice(2, 0, "exec");
 }
+
+// If no command is given, default to chat.
+if (argv.length <= 2) argv.push("chat");
+program.parse(argv);
