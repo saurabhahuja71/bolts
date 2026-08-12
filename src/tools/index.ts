@@ -7,6 +7,7 @@ import { shellTool } from "./shell";
 import { searchCodebaseTool } from "./search";
 import { gitStatusTool, gitDiffTool, gitCommitTool } from "./git";
 import { todoTools } from "./todos";
+import { sshExecuteTool } from "./ssh-execute";
 
 export { ToolRegistry } from "./registry";
 export type { Tool, ToolResult } from "./types";
@@ -21,6 +22,7 @@ export function createDefaultRegistry(): ToolRegistry {
     editFileTool,
     listDirectoryTool,
     shellTool,
+    sshExecuteTool,
     searchCodebaseTool,
     gitStatusTool,
     gitDiffTool,
