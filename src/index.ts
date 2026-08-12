@@ -12,6 +12,7 @@ import { createDefaultRegistry } from "./tools";
 import type { AgentEvent } from "./types";
 
 const program = new Command();
+const labelRawToolOutput = process.env.BOLTS_LABEL_RAW_TOOL_OUTPUT === "1";
 
 program
   .name("opencode")
@@ -84,8 +85,12 @@ program
         if (event.type === "tool_end") {
           console.error(`[tool:end] ${event.toolCall.name} ${event.toolCall.status}`);
           const output = event.toolCall.output;
-          if (typeof output === "string") console.log(output);
-          else if (output !== undefined) console.log(JSON.stringify(output));
+          if (typeof output === "string") {
+            console.log(labelRawToolOutput ? `[tool:${event.toolCall.name}:output]\n${output}` : output);
+          } else if (output !== undefined) {
+            const serialized = JSON.stringify(output);
+            console.log(labelRawToolOutput ? `[tool:${event.toolCall.name}:output]\n${serialized}` : serialized);
+          }
         }
         if (event.type === "error") console.error(`[agent:error] ${event.error}`);
       });
