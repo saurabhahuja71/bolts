@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { existsSync } from "node:fs";
 import { z } from "zod";
 import type { Tool } from "./types";
 import { truncateOutput } from "./types";
@@ -17,7 +18,9 @@ export const sshExecuteTool: Tool = {
   requiresPermission: true,
   execute: async (input: z.infer<typeof inputSchema>) => new Promise((resolve) => {
     const timeoutMs = input.timeout ?? 30_000;
-    const child = spawn("ssh", ["-T", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10", input.host, input.command], { env: { ...process.env, FORCE_COLOR: "0" } });
+    const sshConfig = process.env.SSH_CONFIG_PATH ?? `${process.env.HOME ?? ""}/.ssh/config`;
+    const configArgs = sshConfig && existsSync(sshConfig) ? ["-F", sshConfig] : [];
+    const child = spawn("ssh", ["-T", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10", ...configArgs, input.host, input.command], { env: { ...process.env, FORCE_COLOR: "0" } });
     let stdout = "";
     let stderr = "";
     let timedOut = false;
