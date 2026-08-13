@@ -140,6 +140,15 @@ export class Agent {
         fullResponse += chunk;
         this.emit({ type: "text", content: chunk });
       }
+      if (process.env.BOLTS_DIAGNOSTICS === "1") {
+        const steps = await result.steps;
+        console.error(`[bolts:diagnostic] steps=${JSON.stringify(steps.map((step) => ({
+          finishReason: step.finishReason,
+          text: step.text,
+          toolCalls: step.toolCalls,
+          toolResults: step.toolResults,
+        })))} `);
+      }
     } catch (err) {
       this.emit({ type: "error", error: (err as Error).message });
       throw new AgentError(`Agent loop failed at step ${step}: ${(err as Error).message}`);

@@ -78,6 +78,11 @@ program
           ...(permission ? { permissionMode: permission } : {}),
         },
       });
+      if (process.env.BOLTS_DIAGNOSTICS === "1") {
+        const registry = createDefaultRegistry();
+        console.error(`[bolts:diagnostic] provider=${config.provider} model=${config.model} baseUrl=${config.baseUrl ?? ""} permission=${config.permissionMode} cwd=${config.cwd}`);
+        console.error(`[bolts:diagnostic] tools=${registry.listNames().join(",")}`);
+      }
       const agent = new Agent(config, createDefaultRegistry(), (event: AgentEvent) => {
         const showTools = opts.debug || process.env.BOLTS_RAW_TOOL_OUTPUT !== "0";
         if (!showTools) return;
